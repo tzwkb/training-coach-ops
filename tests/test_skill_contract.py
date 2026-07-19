@@ -27,7 +27,7 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(f"`{route}`", self.text)
 
     def test_body_references_resources_and_guardrails(self):
-        for reference in ("data-model.md", "adjustment-policy.md", "safety-boundaries.md"):
+        for reference in ("data-model.md", "adjustment-policy.md", "safety-boundaries.md", "evidence-policy.md"):
             self.assertIn(reference, self.text)
             self.assertTrue((SKILL_ROOT / "references" / reference).exists())
         for script in ("client.py", "ingest.py", "analyze.py", "plan.py", "render.py", "validate.py"):
@@ -35,6 +35,23 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("先解析唯一学员", self.text)
         self.assertIn("高风险调整需要批准", self.text)
         self.assertNotIn("TODO", self.text)
+
+    def test_scientific_claims_require_proactive_authoritative_web_research(self):
+        evidence = (SKILL_ROOT / "references/evidence-policy.md").read_text(encoding="utf-8")
+        required = (
+            "必须主动联网检索",
+            "医学与安全",
+            "训练与表现",
+            "营养与体成分",
+            "数值阈值",
+            "适用人群",
+            "直接页面",
+            "不得伪造精确数字",
+        )
+        for value in required:
+            self.assertIn(value, evidence)
+        self.assertIn("权威证据政策", self.text)
+        self.assertIn("evidence-policy.md", self.text)
 
     def test_openai_metadata_mentions_skill(self):
         metadata = (SKILL_ROOT / "agents/openai.yaml").read_text(encoding="utf-8")

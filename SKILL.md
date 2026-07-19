@@ -26,12 +26,18 @@ description: Use when managing multiple strength and conditioning clients, inclu
 4. 保留原始反馈；未知信息写为 `null`，推断信息标记 `inferred` 或 `needs_review`。
 5. 通过脚本追加日志、激活计划和生成报告。不要直接编辑 `daily.jsonl` 或覆盖 `current.json`。
 6. 高风险调整需要批准。不要删除学员、日志、归档计划或原始来源。
+7. 医学安全、疼痛、营养、恢复、训练处方或数值阈值相关结论必须通过主动联网检索核对权威来源；没有适用证据时不得自动执行。
 
 开始前按任务读取：
 
 - 字段、事实源或反馈解析：读 [references/data-model.md](references/data-model.md)。
 - 自动进阶或计划变更：读 [references/adjustment-policy.md](references/adjustment-policy.md)。
 - 疼痛、异常恢复或医疗边界：读 [references/safety-boundaries.md](references/safety-boundaries.md)。
+- 生成训练、营养、恢复或安全建议：读权威证据政策 [references/evidence-policy.md](references/evidence-policy.md)。
+
+## 权威证据门禁
+
+涉及计划生成或修改、疼痛与恢复判断、营养建议、医学安全或任何精确阈值时，必须按 `evidence-policy.md` 主动检索、打开并核对直接来源。报告结论时同时给出适用人群、证据层级、直接链接和局限；来源不适用于当前学员时不得套用。单纯保存用户事实、解析路径、版本控制和确定性计算不需要科学文献。
 
 ## 工作流路由
 
@@ -47,7 +53,8 @@ description: Use when managing multiple strength and conditioning clients, inclu
 python3 <skill-dir>/scripts/client.py create --workspace <absolute-workspace> --id <client-id> --name <display-name> --profile <profile-json>
 ```
 
-4. 生成候选计划，先运行 `scripts/plan.py validate`。得到教练批准后，以 `--expected-version 0 --approved` 激活。
+4. 按权威证据政策主动检索候选计划中的训练、营养和安全依据，记录适用人群、来源及局限。
+5. 生成候选计划，先运行 `scripts/plan.py validate`。得到教练批准后，以 `--expected-version 0 --approved` 激活。
 
 ### `ingest`
 
@@ -82,22 +89,24 @@ python3 <skill-dir>/scripts/render.py daily --workspace <absolute-workspace> --c
 
 1. 运行 `scripts/analyze.py --workspace <absolute-workspace> --client <client-id> --end-date <YYYY-MM-DD>`。
 2. 区分事实、数据缺口、解释和建议；不从缺失数据推断不执行。
-3. 运行 `scripts/render.py weekly` 保存周报。
+3. 新增训练、恢复、营养或安全解释前，按权威证据政策主动联网核对；没有适用证据时标记 `needs_review`。
+4. 运行 `scripts/render.py weekly` 保存周报。
 
 ### `adjust-plan`
 
 用于进阶、减量或更改周期。
 
 1. 读取调整政策和安全边界。
-2. 从当前计划复制候选版本，只修改有证据支持的字段，并写明 `change_summary`。
-3. 运行 `scripts/plan.py validate`。
-4. 低风险进阶可按既定规则激活。热量、总组数、有氧总量、疼痛动作替换或周期阶段变化必须先取得教练批准，再运行：
+2. 主动联网检索并打开与拟调整内容直接相关的权威来源；记录来源、适用人群、证据层级和局限。
+3. 从当前计划复制候选版本，只修改有适用证据支持的字段，并写明 `change_summary`；证据不足时不得伪造精确数字或自动调整。
+4. 运行 `scripts/plan.py validate`。
+5. 低风险进阶可按既定规则激活。热量、总组数、有氧总量、疼痛动作替换或周期阶段变化必须先取得教练批准，再运行：
 
 ```bash
 python3 <skill-dir>/scripts/plan.py activate --workspace <absolute-workspace> --client <client-id> --candidate <candidate-json> --expected-version <current-version> --approved
 ```
 
-5. 报告版本、差异、依据和下一次复查条件。
+6. 报告版本、差异、权威来源、适用性、局限和下一次复查条件。
 
 ### `validate`
 
