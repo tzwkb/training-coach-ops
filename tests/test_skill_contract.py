@@ -1,0 +1,69 @@
+import re
+import unittest
+from pathlib import Path
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+
+
+class SkillContractTests(unittest.TestCase):
+    def setUp(self):
+        self.text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_frontmatter_has_name_and_trigger_terms(self):
+        match = re.match(r"^---\n(.*?)\n---", self.text, re.DOTALL)
+        self.assertIsNotNone(match)
+        frontmatter = match.group(1)
+        self.assertIn("name: training-coach-ops", frontmatter)
+        for term in ("多学员", "训练计划", "每日反馈", "周报", "计划调整"):
+            self.assertIn(term, frontmatter)
+        self.assertNotIn("TODO", frontmatter)
+
+    def test_body_routes_all_supported_workflows(self):
+        for route in ("onboard", "ingest", "daily", "weekly-review", "adjust-plan", "validate"):
+            self.assertIn(f"`{route}`", self.text)
+
+    def test_body_references_resources_and_guardrails(self):
+        for reference in ("data-model.md", "adjustment-policy.md", "safety-boundaries.md"):
+            self.assertIn(reference, self.text)
+            self.assertTrue((SKILL_ROOT / "references" / reference).exists())
+        for script in ("client.py", "ingest.py", "analyze.py", "plan.py", "render.py", "validate.py"):
+            self.assertIn(script, self.text)
+        self.assertIn("先解析唯一学员", self.text)
+        self.assertIn("高风险调整需要批准", self.text)
+        self.assertNotIn("TODO", self.text)
+
+    def test_openai_metadata_mentions_skill(self):
+        metadata = (SKILL_ROOT / "agents/openai.yaml").read_text(encoding="utf-8")
+        self.assertIn("$training-coach-ops", metadata)
+
+    def test_skill_tree_has_no_live_workspace_coupling(self):
+        forbidden = (
+            re.compile(r"/" + r"Users/[^/\s]+/"),
+            re.compile(r"[A-Za-z]:\\" + r"Users\\[^\\\s]+\\", re.IGNORECASE),
+            re.compile(r"Desktop[/\\][^/\n]+", re.IGNORECASE),
+        )
+        for path in SKILL_ROOT.rglob("*"):
+            if not path.is_file() or path == Path(__file__) or path.suffix not in {".py", ".md", ".yaml"}:
+                continue
+            text = path.read_text(encoding="utf-8")
+            for pattern in forbidden:
+                self.assertIsNone(pattern.search(text), path)
+
+    def test_workspace_resolution_is_lazy_and_ordered(self):
+        required = (
+            "不要在 Skill 加载时询问工作区",
+            "用户明确提供的绝对路径",
+            "当前目录包含 `clients/index.json`",
+            "`TRAINING_COACH_WORKSPACE`",
+            "最后才询问用户",
+            "不静默回退",
+        )
+        for value in required:
+            self.assertIn(value, self.text)
+        positions = [self.text.index(value) for value in required]
+        self.assertEqual(positions, sorted(positions))
+
+
+if __name__ == "__main__":
+    unittest.main()

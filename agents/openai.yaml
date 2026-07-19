@@ -1,0 +1,4 @@
+interface:
+  display_name: "Training Coach Ops"
+  short_description: "管理多学员训练计划、每日反馈、周报分析及安全调整流程"
+  default_prompt: "Use $training-coach-ops to review a client’s latest training data and prepare the next coaching action."
