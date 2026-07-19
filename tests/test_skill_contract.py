@@ -15,8 +15,11 @@ class SkillContractTests(unittest.TestCase):
         self.assertIsNotNone(match)
         frontmatter = match.group(1)
         self.assertIn("name: training-coach-ops", frontmatter)
-        for term in ("多学员", "训练计划", "每日反馈", "周报", "计划调整"):
+        for term in ("multiple", "training plan", "daily feedback", "weekly reviews", "plan adjustments"):
             self.assertIn(term, frontmatter)
+        description = next(line for line in frontmatter.splitlines() if line.startswith("description: "))
+        self.assertTrue(description.startswith("description: Use when "))
+        self.assertIsNone(re.search(r"[\u4e00-\u9fff]", description))
         self.assertNotIn("TODO", frontmatter)
 
     def test_body_routes_all_supported_workflows(self):

@@ -1,6 +1,6 @@
 ---
 name: training-coach-ops
-description: 管理多学员体能与力量训练的 Agent 工作流。用于新学员建档、生成或更新训练计划、导入每日反馈、分析体重与训练趋势、生成每日发送内容和周报，以及按既定规则提出计划调整。所有写操作先解析唯一学员；医疗、疼痛和高风险计划变化必须人工复核。
+description: Use when managing multiple strength and conditioning clients, including onboarding, creating or updating a training plan, ingesting daily feedback, analyzing training trends, producing daily coaching messages or weekly reviews, and proposing evidence-based plan adjustments.
 ---
 
 # Training Coach Ops
