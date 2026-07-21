@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 
-SKILL_ROOT = Path("/Users/spellbook/.codex/skills/training-coach-ops")
+SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
 class SkillContractTests(unittest.TestCase):
