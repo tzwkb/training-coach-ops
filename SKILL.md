@@ -81,7 +81,8 @@ python3 <skill-dir>/scripts/ingest.py --workspace <absolute-workspace> --client 
 python3 <skill-dir>/scripts/render.py daily --workspace <absolute-workspace> --client <client-id> --date <YYYY-MM-DD>
 ```
 
-3. 若输出提示安全复核，不补充自行加量建议。
+3. 读取渲染输出并展示给用户。
+4. 检查前 3 天日志中缺失的反馈字段（重量/RPE/组数、睡眠、步数、疼痛、饮食执行率），列出待补项，追问用户。不要等用户主动提供。
 
 ### `weekly-review`
 

@@ -74,6 +74,54 @@ class RenderValidateTests(unittest.TestCase):
         output = render_daily(self.root, "alpha", date(2026, 7, 19)).read_text()
         self.assertIn("1650–1750 kcal", output)
 
+    def test_daily_export_contains_week_specific_training_and_meals(self):
+        current = self.root / "clients/alpha/plans/current.json"
+        plan = json.loads(current.read_text())
+        plan["effective_from"] = "2026-07-20"
+        plan["schedule"] = [{
+            "day": "monday",
+            "type": "strength",
+            "title": "下肢臀腿力量",
+            "warmup": "史密斯深蹲前：约50%工作重量×10、70%×5，两组不计正式组。",
+            "workouts": [
+                {"id": "mon-smith-squat", "name": "史密斯深蹲", "sets": 3, "reps": [8, 12], "rest_seconds": 90},
+                {"id": "mon-reverse-lunge", "name": "哑铃反向箭步蹲", "sets": 3, "reps_text": "每侧8–10次", "rest_seconds": 75},
+            ],
+            "finisher": {"name": "跑步机坡度走", "duration_minutes": 10},
+        }]
+        plan["progression"] = {
+            "type": "double_progression",
+            "weekly_rpe": {"1": 6},
+            "week_1_set_cap": 2,
+            "deload_week": 7,
+            "deload_set_subtract": 1,
+        }
+        plan["nutrition"] = {
+            "calories": [1650, 1750],
+            "protein_g": [110, 125],
+            "meal_cycle": [{
+                "breakfast": "早餐A",
+                "lunch": "午餐A",
+                "snack": "加餐A",
+                "dinner": "晚餐A",
+            }],
+        }
+        plan["daily_targets"] = {"steps": {"1-2": "≥8,000步"}, "water": "2–2.5 L", "sleep": "7.5–9小时"}
+        current.write_text(json.dumps(plan))
+
+        output = render_daily(self.root, "alpha", date(2026, 7, 20)).read_text()
+
+        self.assertIn("第1周", output)
+        self.assertIn("史密斯深蹲前", output)
+        self.assertIn("史密斯深蹲：2组×8–12次，RPE 6，休90秒", output)
+        self.assertIn("哑铃反向箭步蹲：2组×每侧8–10次，RPE 6，休75秒", output)
+        self.assertIn("跑步机坡度走：10分钟", output)
+        self.assertIn("早餐：早餐A", output)
+        self.assertIn("午餐：午餐A", output)
+        self.assertIn("加餐：加餐A", output)
+        self.assertIn("晚餐：晚餐A", output)
+        self.assertIn("≥8,000步", output)
+
     def test_validator_detects_plan_client_mismatch(self):
         current = self.root / "clients/alpha/plans/current.json"
         plan = json.loads(current.read_text())
